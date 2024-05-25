@@ -9,7 +9,7 @@ interface ProtectedProps {
 export function UserProtectedRoute({ children }: ProtectedProps) {
   const user = useRecoilValue(userState);
 
-  if (user?.role != "admin") {
+  if (user?.role != "user") {
     return <Navigate to={"/"} />;
   } else {
     return <>{children};</>;
