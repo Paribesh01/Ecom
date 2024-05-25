@@ -1,12 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRecoilValue } from "recoil";
 
 import { userState } from "../../recoil/atoms";
 import { useOrder } from "../../hooks/useOrder";
+import { Order } from "../../db/types";
 
 export function UserOrderTable() {
   const { getUserOrders, orders, deleteOrder, updateOrder } = useOrder();
   const user = useRecoilValue(userState);
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
+  const [updatedOrderData, setUpdatedOrderData] = useState<Partial<Order>>({});
 
   useEffect(() => {
     if (user) {
@@ -14,34 +17,24 @@ export function UserOrderTable() {
     }
   }, [user, getUserOrders]);
 
-  const handleEdit = (order: any) => {
-    const updatedOrder = { ...order };
+  const handleEdit = (order: Order) => {
+    setEditingOrderId(order.id);
+    setUpdatedOrderData(order);
+  };
 
-    const newPickupLocation = prompt(
-      "Enter updated Pickup Location:",
-      order.pickupLocation
-    );
-    if (newPickupLocation !== null) {
-      updatedOrder.pickupLocation = newPickupLocation;
-    }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setUpdatedOrderData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-    const newDropoffLocation = prompt(
-      "Enter updated Dropoff Location:",
-      order.dropoffLocation
-    );
-    if (newDropoffLocation !== null) {
-      updatedOrder.dropoffLocation = newDropoffLocation;
-    }
-
-    const newReceiverPhoneNo = prompt(
-      "Enter updated Receiver Phone No:",
-      order.receiverPhoneNo
-    );
-    if (newReceiverPhoneNo !== null) {
-      updatedOrder.receiverPhoneNo = newReceiverPhoneNo;
-    }
-
-    updateOrder(order.id, updatedOrder);
+  const handleSave = (orderId: string) => {
+    updateOrder(orderId, updatedOrderData);
+    setEditingOrderId(null);
   };
 
   return (
@@ -59,26 +52,70 @@ export function UserOrderTable() {
           </tr>
         </thead>
         <tbody>
-          {orders.map((order) => (
+          {orders.map((order: Order) => (
             <tr key={order.id}>
               <td>{order.id}</td>
-              <td>{order.pickupLocation}</td>
-              <td>{order.dropoffLocation}</td>
-              <td>{order.receiverPhoneNo}</td>
+              <td>
+                {editingOrderId === order.id ? (
+                  <input
+                    type="text"
+                    name="pickupLocation"
+                    value={updatedOrderData.pickupLocation || ""}
+                    onChange={handleChange}
+                  />
+                ) : (
+                  order.pickupLocation
+                )}
+              </td>
+              <td>
+                {editingOrderId === order.id ? (
+                  <input
+                    type="text"
+                    name="dropoffLocation"
+                    value={updatedOrderData.dropoffLocation || ""}
+                    onChange={handleChange}
+                  />
+                ) : (
+                  order.dropoffLocation
+                )}
+              </td>
+              <td>
+                {editingOrderId === order.id ? (
+                  <input
+                    type="text"
+                    name="receiverPhoneNo"
+                    value={updatedOrderData.receiverPhoneNo || ""}
+                    onChange={handleChange}
+                  />
+                ) : (
+                  order.receiverPhoneNo
+                )}
+              </td>
               <td>{order.status}</td>
               <td>
-                <button
-                  onClick={() => handleEdit(order)}
-                  className="bg-blue-400"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => deleteOrder(order.id)}
-                  className="bg-red-400"
-                >
-                  Delete
-                </button>
+                {editingOrderId === order.id ? (
+                  <button
+                    onClick={() => handleSave(order.id)}
+                    className="bg-green-400"
+                  >
+                    Save
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => handleEdit(order)}
+                      className="bg-blue-400"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => deleteOrder(order.id)}
+                      className="bg-red-400"
+                    >
+                      Delete
+                    </button>
+                  </>
+                )}
               </td>
             </tr>
           ))}
