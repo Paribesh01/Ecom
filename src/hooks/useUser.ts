@@ -84,7 +84,7 @@ export const useUser = () => {
       setUser(null);
       toast.success("Successfully logged out");
     } catch (error: any) {
-      toast.error("Logout failed: " + error.message);
+      
       console.error(error);
     }
   };
